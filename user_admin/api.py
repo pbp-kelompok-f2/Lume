@@ -1,4 +1,3 @@
-# user_admin/api.py
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required, user_passes_test
