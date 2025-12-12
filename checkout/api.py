@@ -21,7 +21,7 @@ from .models import (
 
 
 # ==========================
-# Helpers
+# Helpers API
 # ==========================
 
 def _get_request_data(request):
@@ -390,3 +390,48 @@ def booking_checkout_api(request, booking_id):
             "total": float(order.total),
         }
     )
+
+@csrf_exempt
+@login_required(login_url="/user/login/")
+def order_history_json(request):
+    # Ambil history order user
+    orders = ProductOrder.objects.filter(user=request.user).order_by('-created_at')
+    
+    data = []
+    for order in orders:
+        items_data = []
+        
+        # Di sini kita pakai select_related('product') untuk efisiensi
+        for item in order.items.select_related('product'):
+            img_url = ""
+            
+            # LOGIKA PENTING: Ambil gambar dari Product asli via ForeignKey
+            if item.product:
+                # Cek apakah model Product punya 'proxied_thumbnail' (dari file catalog/models.py Anda)
+                if hasattr(item.product, 'proxied_thumbnail'):
+                    img_url = item.product.proxied_thumbnail
+                # Fallback ke field thumbnail biasa
+                elif item.product.thumbnail:
+                    img_url = item.product.thumbnail
+            
+            # Jika produk sudah dihapus (item.product is None), gambar akan kosong string ""
+            
+            items_data.append({
+                "name": item.product_name,
+                "price": float(item.unit_price),
+                "quantity": item.quantity,
+                "image": img_url  # <--- Ini kuncinya, kirim URL ke Flutter
+            })
+
+        # Set default status jika field tidak ada
+        status = getattr(order, 'status', 'Completed')
+        
+        data.append({
+            "id": str(order.id),
+            "date_ordered": order.created_at.strftime("%Y-%m-%d"),
+            "status": status,
+            "total_amount": float(order.total),
+            "items": items_data
+        })
+    
+    return JsonResponse(data, safe=False)

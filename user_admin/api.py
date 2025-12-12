@@ -10,6 +10,7 @@ from catalog.models import Product
 from cart.models import Cart
 from bookingkelas.models import Booking
 from checkout.models import ProductOrder, ProductOrderItem, BookingOrder, BookingOrderItem
+from django.views.decorators.csrf import csrf_exempt
 
 
 def is_admin(u):
@@ -157,3 +158,25 @@ def api_activity(request):
         })
     act.sort(key=lambda x: x["ts"], reverse=True)
     return JsonResponse({"ok": True, "activity": act[:10]})
+
+def is_admin(user):
+    return user.is_authenticated and user.is_staff
+
+@csrf_exempt
+@login_required
+@user_passes_test(is_admin)
+def admin_dashboard_stats(request):
+    total_users = User.objects.count()
+    total_orders = ProductOrder.objects.count()
+    total_bookings = Booking.objects.filter(is_cancelled=False).count()
+
+    product_income = ProductOrder.objects.aggregate(Sum('total'))['total__sum'] or 0
+    booking_income = BookingOrder.objects.aggregate(Sum('total'))['total__sum'] or 0
+    total_income = product_income + booking_income
+
+    return JsonResponse({
+        "total_users": total_users,
+        "total_orders": total_orders,
+        "total_bookings": total_bookings,
+        "total_income": float(total_income),
+    })

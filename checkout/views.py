@@ -9,9 +9,9 @@ from .forms import CartCheckoutForm
 from .models import ProductOrder, ProductOrderItem, BookingOrder, BookingOrderItem
 from cart.models import Cart
 from bookingkelas.models import Booking, ClassSessions
-from decimal import Decimal
 from django.db.models import F
-from catalog.models import Product
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 
 @login_required(login_url="/user/login/")
@@ -229,3 +229,69 @@ def cart_summary_json(request):
 @login_required(login_url="/user/login/")
 def order_confirmed(request):
     return render(request, "checkout/order_confirmed.html")
+
+@login_required
+def booking_details_api(request, booking_id):
+    """
+    API untuk menampilkan detail harga sebelum user klik 'Confirm Payment'.
+    Dipanggil saat user masuk ke halaman checkout kelas.
+    """
+    try:
+        # Ambil booking milik user yang sedang login
+        booking = Booking.objects.get(id=booking_id, user=request.user)
+        
+        data = {
+            "title": booking.session.title,
+            "instructor": booking.session.instructor,
+            "time": booking.session.time,
+            "day": booking.day_selected, # Hari yang dipilih (misal: Monday)
+            "price": booking.price_at_booking,
+            "total_payment": booking.price_at_booking, # Tambahkan pajak/admin fee disini jika ada
+        }
+        return JsonResponse({"status": "success", "data": data})
+    except Booking.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Booking not found"}, status=404)
+
+@csrf_exempt
+@login_required
+def process_booking_payment_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            booking_id = data.get('booking_id')
+            
+            # 1. Ambil Booking
+            booking = Booking.objects.get(id=booking_id, user=request.user)
+            
+            # 2. Cek apakah sudah dibayar (Cek di BookingOrderItem)
+            if BookingOrderItem.objects.filter(booking=booking).exists():
+                return JsonResponse({"status": "error", "message": "Booking already paid"}, status=400)
+
+            # 3. BUAT BOOKING ORDER (Induk)
+            # Karena BookingOrder butuh total/subtotal, kita isi dengan harga booking
+            new_order = BookingOrder.objects.create(
+                user=request.user,
+                subtotal=booking.price_at_booking,
+                total=booking.price_at_booking,
+                notes="Booked via Mobile App"
+            )
+
+            # 4. BUAT BOOKING ORDER ITEM (Anak)
+            # Model Anda mewajibkan session_title dan unit_price
+            BookingOrderItem.objects.create(
+                order=new_order,
+                booking=booking,
+                session_title=booking.session.title, # Wajib diisi sesuai model
+                unit_price=booking.price_at_booking, # Wajib diisi sesuai model
+                quantity=1
+            )
+            
+            return JsonResponse({"status": "success", "message": "Payment successful!"})
+
+        except Booking.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Booking not found"}, status=404)
+        except Exception as e:
+            print(f"ERROR CHECKOUT: {e}") # Cek terminal kalau masih error
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+            
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=401)

@@ -11,4 +11,5 @@ urlpatterns = [
     path("api/orders/", api.api_orders, name="api_orders"),
     path("api/bookings/", api.api_bookings, name="api_bookings"),
     path("api/activity/", api.api_activity, name="api_activity"),
+    path("api/dashboard-stats/", api.admin_dashboard_stats, name="admin_dashboard_stats"),
 ]

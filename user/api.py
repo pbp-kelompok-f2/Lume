@@ -59,6 +59,9 @@ def login_api(request):
             "username": user.username,
             "email": user.email,
             "phone": getattr(user, "phone", "") or "",
+            "profile_picture": getattr(user, "profile_picture", "") or "",
+            "is_staff": user.is_staff,
+            "is_superuser": user.is_superuser
         }
     })
 
@@ -143,6 +146,7 @@ def profile_api(request):
             "email": user.email,
             "phone": getattr(user, "phone", "") or "",
             "member_since": user.date_joined.isoformat(),
+            "profile_picture": getattr(request.user, "profile_picture", "") or "",
         },
         "orders": product_orders,
         "bookings": bookings,
@@ -186,3 +190,35 @@ def logout_api(request):
 
     logout(request)
     return JsonResponse({"ok": True, "detail": "Logged out"})
+
+@csrf_exempt
+@login_required
+def update_profile_api(request):
+    if request.method != "POST":
+        return JsonResponse({"detail": "Method not allowed"}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        user = request.user
+        
+        if 'username' in data and data['username']:
+            user.username = data['username']
+        
+        if 'phone' in data:
+            user.phone = data['phone']
+
+        if 'profile_picture' in data:
+            user.profile_picture = data['profile_picture']
+            
+        user.save()
+        
+        return JsonResponse({
+            "ok": True,
+            "message": "Profile updated successfully",
+            "user": {
+                "username": user.username,
+                "phone": getattr(user, "phone", "")
+            }
+        })
+    except Exception as e:
+        return JsonResponse({"ok": False, "detail": str(e)}, status=400)

@@ -24,5 +24,6 @@ urlpatterns = [
     path("delete-flutter/<int:pk>/", views.delete_session_flutter, name="delete_session_flutter"),
     path("book-flutter/", views.book_session_flutter, name="book_session_flutter"),
     path("my-bookings/", views.my_bookings_flutter, name="my_bookings_flutter"),
+    path("api/popular/", views.popular_sessions_json, name="popular_sessions_json"),
 ]
 

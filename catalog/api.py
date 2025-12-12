@@ -58,7 +58,7 @@ def api_product_create(request):
     return JsonResponse(serialize_product(p), status=201)
 
 @csrf_exempt
-@require_http_methods(["PUT","PATCH"])
+@require_http_methods(["PUT","PATCH", "POST"])
 @login_required
 @user_passes_test(is_admin)
 def api_product_update(request, pk):
@@ -79,7 +79,7 @@ def api_product_update(request, pk):
     return JsonResponse(serialize_product(p))
 
 @csrf_exempt
-@require_http_methods(["DELETE"])
+@require_http_methods(["DELETE", "POST"])
 @login_required
 @user_passes_test(is_admin)
 def api_product_delete(request, pk):

@@ -14,8 +14,6 @@ from .views import _selected_qty
 @login_required
 @csrf_exempt
 def cart_list_flutter(request):
-        
-    # 2. Lanjut ke logika yang sudah ada...
     if request.method != "GET":
         return HttpResponseBadRequest("GET required")
 
@@ -52,18 +50,22 @@ def cart_list_flutter(request):
         "items": items,
     })
 
-@login_required
 @csrf_exempt
 @transaction.atomic
 def add_to_cart_flutter(request):
-
-    # 2. Lanjut ke logika yang sudah ada...
     if request.method != "POST":
         return HttpResponseBadRequest("POST required")
 
+    # kalau belum login, balikin JSON, bukan redirect HTML
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            "ok": False,
+            "message": "Please log in before adding items to your cart.",
+        }, status=200)
+
     try:
         data = json.loads(request.body)
-    except json.JSONDecodeError:  # <--- INI BAGIAN YANG HILANG SEBELUMNYA
+    except json.JSONDecodeError:  
         return HttpResponseBadRequest("Invalid JSON")
 
     product_id = data.get("product_id")
@@ -119,13 +121,12 @@ def add_to_cart_flutter(request):
 @csrf_exempt
 @transaction.atomic
 def set_quantity_flutter(request):
-    # 2. Lanjut ke logika yang sudah ada...
     if request.method != "POST":
         return HttpResponseBadRequest("POST required")
 
     try:
         data = json.loads(request.body)
-    except json.JSONDecodeError:  # <--- INI BAGIAN YANG HILANG SEBELUMNYA
+    except json.JSONDecodeError:
         return HttpResponseBadRequest("Invalid JSON")
     item_id = data.get("item_id")
     qty = data.get("quantity")
@@ -224,14 +225,12 @@ def remove_item_flutter(request):
 @csrf_exempt
 @transaction.atomic
 def clear_cart_flutter(request):
-
-    # 2. Lanjut ke logika yang sudah ada...
     if request.method != "POST":
         return HttpResponseBadRequest("POST required")
 
     try:
         data = json.loads(request.body)
-    except json.JSONDecodeError:  # <--- INI BAGIAN YANG HILANG SEBELUMNYA
+    except json.JSONDecodeError: 
         return HttpResponseBadRequest("Invalid JSON")
 
     cart, _ = Cart.objects.select_for_update().get_or_create(user=request.user)
@@ -286,13 +285,12 @@ def toggle_select_flutter(request):
 @csrf_exempt
 @transaction.atomic
 def select_all_flutter(request):
-    # 2. Lanjut ke logika yang sudah ada...
     if request.method != "POST":
         return HttpResponseBadRequest("POST required")
 
     try:
         data = json.loads(request.body)
-    except json.JSONDecodeError:  # <--- INI BAGIAN YANG HILANG SEBELUMNYA
+    except json.JSONDecodeError: 
         return HttpResponseBadRequest("Invalid JSON")
 
     cart, _ = Cart.objects.select_for_update().get_or_create(user=request.user)
@@ -310,13 +308,12 @@ def select_all_flutter(request):
 @csrf_exempt
 @transaction.atomic
 def unselect_all_flutter(request):
-    # 2. Lanjut ke logika yang sudah ada...
     if request.method != "POST":
         return HttpResponseBadRequest("POST required")
 
     try:
         data = json.loads(request.body)
-    except json.JSONDecodeError:  # <--- INI BAGIAN YANG HILANG SEBELUMNYA
+    except json.JSONDecodeError: 
         return HttpResponseBadRequest("Invalid JSON")
 
     cart, _ = Cart.objects.select_for_update().get_or_create(user=request.user)

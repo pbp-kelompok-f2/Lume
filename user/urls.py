@@ -13,4 +13,5 @@ urlpatterns = [
     path("api/profile/", api.profile_api, name="api-profile"),
     path("api/register/", api.register_api, name="api-register"),
     path("api/logout/", api.logout_api, name="api-logout"),
+    path("api/profile/update/", api.update_profile_api, name="update_profile_api"),
 ]
