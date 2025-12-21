@@ -5,7 +5,6 @@ app_name = "useradmin"
 
 urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
-
     path("api/stats/", api.api_stats, name="api_stats"),
     path("api/users/", api.api_users, name="api_users"),
     path("api/orders/", api.api_orders, name="api_orders"),
