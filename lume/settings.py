@@ -31,7 +31,7 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = not PRODUCTION
 
-ALLOWED_HOSTS = ["localhost","localhost:8000", "juma-jordan-lume.pbp.cs.ui.ac.id", "10.0.2.2", "127.0.0.1", "127.0.0.1:8000"]
+ALLOWED_HOSTS = ["localhost","localhost:8000", "juma-jordan-lume.pbp.cs.ui.ac.id", "10.0.2.2", "127.0.0.1", "127.0.0.1:8000", ".vercel.app",]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://juma-jordan-lume.pbp.cs.ui.ac.id",
@@ -40,6 +40,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:51134",
     "http://127.0.0.1",
     "http://127.0.0.1:8000",
+     "https://*.vercel.app",
 ]
 
 
@@ -166,6 +167,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 WHITENOISE_USE_FINDERS = True  # serve app/static files even if collectstatic was skipped
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
